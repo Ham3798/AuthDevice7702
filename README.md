@@ -6,10 +6,6 @@ This project is a Proof of Concept (PoC) for a system that authorizes session-ba
 
 The diagram below illustrates the entire flow, from user authentication to transaction execution.
 
-![Sequence Diagram](sequenceDiagram.svg)
-
-### Diagram Source (Mermaid)
-
 ```mermaid
 sequenceDiagram
   participant User
@@ -27,7 +23,7 @@ sequenceDiagram
   Browser->>EOA: startSession(π, walletSig, sessionPubKey, expiry)
   EOA->>SessionDelegate: call startSession()
   SessionDelegate-->>EOA: session active
-  == after that ==
+  note over User, SessionDelegate: after that
   Device->>Browser: sign txHash (ZK again)
   Browser->>EOA: execute(data, proof2)
   EOA->>SessionDelegate: execute(...)
