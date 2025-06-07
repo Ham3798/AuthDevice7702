@@ -66,6 +66,8 @@ This approach suggests that the `sessionPriv` should be managed inside a sandbox
 
 ## Option 2: Per-Transaction ZK Proof from WebAuthn (Passkey)
 
+> **Author's Initial Take**: This model represents my first approach. The idea was to get rid of session keys entirely and just have every single transaction authorized with a hardware signature and verified with a ZK proof.
+
 This model enhances security by requiring a hardware-backed signature for every transaction, verified on-chain with a ZK proof.
 
 ```mermaid
@@ -75,25 +77,25 @@ sequenceDiagram
   participant Browser
   participant NoirProver
   participant EOA
-  participant SessionDelegate
+  participant DeviceManager
 
-  %% Session Initialization (Requires EOA wallet signature)
-  User->>Device: Touch ID / Fingerprint
-  Device->>Browser: P-256 Signature (r,s)
-  Browser->>NoirProver: prove_register()
-  NoirProver-->>Browser: π₁
-  Browser->>EOA: startSession(π₁, walletSig, sessionPubKey, expiry)
-  EOA->>SessionDelegate: call startSession()
-  SessionDelegate-->>EOA: session active
-  
+  %% Device Registration (One-time, EOA wallet signature required)
+  User->>Device: Touch ID / Fingerprint (for registration)
+  Device->>Browser: P-256 pubKey + signature
+  Browser->>NoirProver: prove_register(pubKey, sig)
+  NoirProver-->>Browser: zkProof_register
+  Browser->>EOA: registerDevice(zkProof_register, walletSig, devicePubKey)
+  EOA->>DeviceManager: call registerDevice()
+  DeviceManager-->>EOA: device registered
+
   %% For each transaction
-  User->>Device: Touch ID / Fingerprint
+  User->>Device: Touch ID / Fingerprint (for tx)
   Device->>Browser: P-256 Signature on tx data
-  Browser->>NoirProver: prove_touch()
-  NoirProver-->>Browser: zkProof₂
-  Browser->>EOA: execute(data, zkProof₂)
-  EOA->>SessionDelegate: execute(...)
-  SessionDelegate-->>EOA: tx forwarded
+  Browser->>NoirProver: prove_touch(tx_data, sig)
+  NoirProver-->>Browser: zkProof_tx
+  Browser->>EOA: execute(tx_data, zkProof_tx)
+  EOA->>DeviceManager: verify zkProof_tx and forward call
+  DeviceManager-->>EOA: tx forwarded
 ```
 
 | Perspective | MetaMask (Extension Wallet) | Passkey Hardware Authentication |
@@ -181,6 +183,8 @@ This model uses WebAuthn as the **primary authentication** method to authorize a
 
 ## Option 4: The AuthDevice7702 Model (Hybrid Approach)
 
+> **Author's Current Approach**: This is the hybrid model I've settled on for now. It's designed to tackle the high gas fees of Option 2 while making the session key itself more secure.
+
 This model combines a ZK-verified WebAuthn signature to start a session with a per-transaction hardware touch to unlock a temporary, AES-encrypted session key.
 
 | Aspect | Description |
@@ -195,7 +199,7 @@ sequenceDiagram
     participant Browser
     participant NoirProver
     participant EOA
-    participant DeviceMgr as DeviceManager+SessionDelegate
+    participant DeviceMgr as "DeviceManager<br/>+ SessionDelegate"
 
     User->>Device: Touch ID (first use)
     Device->>Browser: P-256 pub + sig

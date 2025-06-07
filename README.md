@@ -3,14 +3,20 @@
 Hardware-locked session keys for EIP-7702 smart-EOAs.
 One touch → short-lived key → ultra-cheap tx.
 
-## 🔑 Concept
-Register device – WebAuthn pubkey + ZK proof → on-chain DeviceManager.
+## 🔑 How It Works (The Hybrid Model)
 
-Start session – wallet signs the new sessionPubKey; ZK proof (device touch) stores it with TTL.
+The flow is designed to be both secure and gas-efficient, combining a one-time ZK proof for setup with cheap `ecrecover` for each transaction.
 
-Every tx – user touches again; browser unwraps the AES-encrypted sessionPriv (never stored raw) and signs.
+1.  **Device Registration (One-time)**: The user's hardware device (e.g., via Touch ID/Face ID) is registered on-chain. A ZK proof verifies the device's signature, linking its public key to the user's EOA in a `DeviceManager` contract.
 
-On-chain – SessionDelegate just runs ecrecover (≈ 3 k gas) and amount/permission checks.
+2.  **Session Authorization**: To start a session, the user signs a message with their main wallet, authorizing a new, temporary session key. A second ZK proof, generated from a hardware touch, confirms the user's presence. The `DeviceManager` then activates the session with a set time-to-live (TTL).
+
+3.  **Transaction Execution**: For every transaction within the session:
+    - The user performs a hardware touch (e.g., Touch ID).
+    - This action locally decrypts the session's private key (which is stored AES-encrypted in the browser).
+    - The decrypted key signs the transaction, and the raw key is immediately cleared from memory.
+
+4.  **On-Chain Verification**: The smart EOA's `SessionDelegate` validates the transaction using `ecrecover`. This is extremely gas-efficient (≈3,000 gas), as it avoids costly on-chain ZK proof verification for every action.
 
 No session key bytes ever leave the browser, yet you avoid per-tx ZK gas.
 
