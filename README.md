@@ -3,6 +3,38 @@
 Hardware-locked session keys for EIP-7702 smart-EOAs.
 One touch → short-lived key → ultra-cheap tx.
 
+
+### Demo Frontend (UI)
+
+Navigate to the `ui` directory, install the necessary packages, and start the application.
+
+```bash
+cd ui
+npm install
+npm run dev
+```
+
+The application will start on `http://localhost:3000`. If port 3000 is in use, it will automatically switch to another available port (e.g., 3001).
+
+### Multi-Device Permission Matrix
+```
+                 ┌─────────────┐
+                 │     EOA     │
+                 └─────┬───────┘
+                       │
+        ┌──────────────┼──────────────┐
+        │              │              │
+   ┌────▼───┐     ┌────▼───┐     ┌────▼───┐
+   │iPhone  │     │MacBook │     │ Yubikey│
+   │TouchID │     │TouchID │     │  FIDO2 │
+   └────────┘     └────────┘     └────────┘
+   Permission:    Permission:    Permission:
+   • Amount: $100 • Amount: $1000• Amount: $10K
+   • DeFi: ✅     • DeFi: ✅     • Admin: ✅
+   • NFT: ❌      • NFT: ✅      • Recovery: ✅
+```
+
+
 ## 🔑 How It Works (The Hybrid Model)
 
 The flow is designed to be both secure and gas-efficient, combining a one-time ZK proof for setup with cheap `ecrecover` for each transaction.
