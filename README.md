@@ -1,7 +1,7 @@
 # AuthDevice7702
 
 Hardware-locked session keys for EIP-7702 smart-EOAs.
-One touch → short-lived key → ultra-cheap tx.
+One touch → short-lived key → safe tx signing.
 
 
 ### Demo Frontend (UI)
@@ -35,7 +35,7 @@ The application will start on `http://localhost:3000`. If port 3000 is in use, i
 ```
 
 
-## 🔑 How It Works (The Hybrid Model)
+## 🔑 How It Works(not implemented all... future work)
 
 The flow is designed to be both secure and gas-efficient, combining a one-time ZK proof for setup with cheap `ecrecover` for each transaction.
 
